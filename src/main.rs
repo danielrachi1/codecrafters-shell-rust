@@ -13,7 +13,7 @@ fn main() {
         let input_words = parse_input(&input);
 
         match input_words[0] {
-            "exit 0" => break,
+            "exit" => break,
             "echo" => println!("{}", input_words[1..].join(" ")),
             _ => println!("{}: command not found", input.trim()),
         }
