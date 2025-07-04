@@ -3,7 +3,6 @@ use std::io::{self, Write};
 
 fn main() {
     loop {
-        // Uncomment this block to pass the first stage
         print!("$ ");
         io::stdout().flush().unwrap();
 
@@ -11,10 +10,16 @@ fn main() {
         let mut input = String::new();
         io::stdin().read_line(&mut input).unwrap();
 
-        if input.trim() == &String::from("exit 0") {
-            break;
-        }
+        let input_words = parse_input(&input);
 
-        println!("{}: command not found", input.trim());
+        match input_words[0] {
+            "exit 0" => break,
+            "echo" => println!("{}", input_words[1..].join(" ")),
+            _ => println!("{}: command not found", input.trim()),
+        }
     }
+}
+
+fn parse_input(input: &str) -> Vec<&str> {
+    input.trim().split(" ").collect::<Vec<&str>>()
 }
