@@ -3,6 +3,8 @@ use std::io::{self, Write};
 
 fn main() {
     loop {
+        let builtins = ["exit", "echo", "type"];
+
         print!("$ ");
         io::stdout().flush().unwrap();
 
@@ -15,6 +17,13 @@ fn main() {
         match input_words[0] {
             "exit" => break,
             "echo" => println!("{}", input_words[1..].join(" ")),
+            "type" => {
+                if builtins.contains(&input_words[1]) {
+                    println!("{} is a shell builtin", input_words[1])
+                } else {
+                    println!("{}: not found", input_words[1])
+                }
+            }
             _ => println!("{}: command not found", input.trim()),
         }
     }
