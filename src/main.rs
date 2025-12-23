@@ -11,6 +11,7 @@ enum InputError {
 enum Command {
     Exit,
     Echo,
+    Type,
 }
 
 impl TryFrom<&str> for Command {
@@ -19,6 +20,7 @@ impl TryFrom<&str> for Command {
         match value {
             "exit" => Ok(Command::Exit),
             "echo" => Ok(Command::Echo),
+            "type" => Ok(Command::Type),
             _ => Err(InputError::CommandNotFound(value.to_string())),
         }
     }
@@ -29,6 +31,7 @@ impl std::fmt::Display for Command {
         match self {
             Command::Exit => write!(f, "exit"),
             Command::Echo => write!(f, "echo"),
+            Command::Type => write!(f, "type"),
         }
     }
 }
@@ -66,6 +69,15 @@ fn main() {
                         print!("{} ", arg);
                     }
                     println!();
+                }
+                Command::Type => {
+                    for arg in input.args {
+                        let comm_res: Result<Command, InputError> = arg.as_str().try_into();
+                        match comm_res {
+                            Ok(comm) => println!("{} is a shell builtin", comm),
+                            Err(_) => println!("{}: not found", arg),
+                        }
+                    }
                 }
             },
             Err(err) => println!("{}", err),
