@@ -9,14 +9,19 @@ fn main() {
         let mut input = String::new();
         io::stdin().read_line(&mut input).unwrap();
 
-        let command = input.split_whitespace().next().unwrap();
-        if command == "exit" {
-            break;
-        } else {
-            println!(
-                "{}: command not found",
-                input.split_whitespace().next().unwrap()
-            );
+        let mut input = input.split_whitespace();
+        let command = input.next().unwrap();
+        match command {
+            "exit" => break,
+            "echo" => {
+                for arg in input {
+                    print!("{} ", arg);
+                }
+                println!();
+            }
+            _ => {
+                println!("{}: command not found", command)
+            }
         }
     }
 }
