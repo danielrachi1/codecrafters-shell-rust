@@ -16,28 +16,16 @@ fn main() {
         let mut buf = String::new();
         io::stdin().read_line(&mut buf).unwrap();
 
-        let input_res = Input::new(&mut buf);
+        let input = match Input::new(&mut buf) {
+            Ok(input) => input,
+            Err(error) => {
+                println!("{}", error);
+                continue;
+            }
+        };
 
-        match input_res {
-            Ok(input) => match input.command {
-                Command::Exit => break,
-                Command::Echo => {
-                    for arg in input.args {
-                        print!("{} ", arg);
-                    }
-                    println!();
-                }
-                Command::Type => {
-                    for arg in input.args {
-                        let comm_res: Result<Command, InputError> = arg.as_str().try_into();
-                        match comm_res {
-                            Ok(comm) => println!("{} is a shell builtin", comm),
-                            Err(_) => println!("{}: not found", arg),
-                        }
-                    }
-                }
-            },
-            Err(err) => println!("{}", err),
+        if input.command.execute(input.args).is_break() {
+            break;
         }
     }
 }

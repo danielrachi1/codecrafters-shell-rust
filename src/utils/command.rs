@@ -1,4 +1,5 @@
 use crate::InputError;
+use std::ops::ControlFlow;
 
 #[derive(Debug)]
 pub enum Command {
@@ -25,6 +26,31 @@ impl std::fmt::Display for Command {
             Command::Exit => write!(f, "exit"),
             Command::Echo => write!(f, "echo"),
             Command::Type => write!(f, "type"),
+        }
+    }
+}
+
+impl Command {
+    pub fn execute(self, args: Vec<String>) -> ControlFlow<()> {
+        match self {
+            Command::Exit => ControlFlow::Break(()),
+            Command::Echo => {
+                for arg in args {
+                    print!("{} ", arg);
+                }
+                println!();
+                ControlFlow::Continue(())
+            }
+            Command::Type => {
+                for arg in args {
+                    let comm_res: Result<Command, InputError> = arg.as_str().try_into();
+                    match comm_res {
+                        Ok(comm) => println!("{} is a shell builtin", comm),
+                        Err(_) => println!("{}: not found", arg),
+                    }
+                }
+                ControlFlow::Continue(())
+            }
         }
     }
 }
