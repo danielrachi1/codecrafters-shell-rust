@@ -1,2 +1,2 @@
-pub mod command;
+pub mod builtin_command;
 pub mod input;

@@ -1,8 +1,8 @@
-use crate::Command;
+use crate::BuiltinCommand;
 use crate::InputError;
 
 pub struct Input {
-    pub command: Command,
+    pub command: BuiltinCommand,
     pub args: Vec<String>,
 }
 

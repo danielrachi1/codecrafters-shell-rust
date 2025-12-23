@@ -5,7 +5,7 @@ mod error;
 mod utils;
 
 use error::InputError;
-use utils::command::Command;
+use utils::builtin_command::BuiltinCommand;
 use utils::input::Input;
 
 fn main() {
