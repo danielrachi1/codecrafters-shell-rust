@@ -24,8 +24,13 @@ fn main() {
             }
         };
 
-        if input.command.execute(input.args).is_break() {
-            break;
+        match input.command.execute(input.args) {
+            Ok(exec) => {
+                if exec.is_break() {
+                    break;
+                }
+            }
+            Err(err) => eprintln!("{}", err),
         }
     }
 }

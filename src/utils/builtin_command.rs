@@ -1,5 +1,6 @@
+use crate::error::InputError;
+
 use super::path_finder::PathFinder;
-use crate::InputError;
 use std::env::VarError;
 use std::ops::ControlFlow;
 
@@ -8,16 +9,16 @@ pub enum BuiltinCommand {
     Exit,
     Echo,
     Type,
+    Run(String),
 }
 
-impl TryFrom<&str> for BuiltinCommand {
-    type Error = InputError;
-    fn try_from(value: &str) -> Result<BuiltinCommand, Self::Error> {
+impl From<&str> for BuiltinCommand {
+    fn from(value: &str) -> BuiltinCommand {
         match value {
-            "exit" => Ok(BuiltinCommand::Exit),
-            "echo" => Ok(BuiltinCommand::Echo),
-            "type" => Ok(BuiltinCommand::Type),
-            _ => Err(InputError::CommandNotFound(value.to_string())),
+            "exit" => BuiltinCommand::Exit,
+            "echo" => BuiltinCommand::Echo,
+            "type" => BuiltinCommand::Type,
+            _ => BuiltinCommand::Run(value.to_string()),
         }
     }
 }
@@ -28,21 +29,26 @@ impl std::fmt::Display for BuiltinCommand {
             BuiltinCommand::Exit => write!(f, "exit"),
             BuiltinCommand::Echo => write!(f, "echo"),
             BuiltinCommand::Type => write!(f, "type"),
+            BuiltinCommand::Run(program) => write!(f, "run: {}", program),
         }
     }
 }
 
 impl BuiltinCommand {
-    pub fn execute(self, args: Vec<String>) -> ControlFlow<()> {
+    pub fn execute(self, args: Vec<String>) -> Result<ControlFlow<()>, InputError> {
         match self {
-            BuiltinCommand::Exit => ControlFlow::Break(()),
+            BuiltinCommand::Exit => Ok(ControlFlow::Break(())),
             BuiltinCommand::Echo => {
                 exec_echo(args);
-                ControlFlow::Continue(())
+                Ok(ControlFlow::Continue(()))
             }
             BuiltinCommand::Type => {
-                let _ = exec_type(args);
-                ControlFlow::Continue(())
+                exec_type(args)?;
+                Ok(ControlFlow::Continue(()))
+            }
+            BuiltinCommand::Run(program) => {
+                exec_run(program, args)?;
+                Ok(ControlFlow::Continue(()))
             }
         }
     }
@@ -57,11 +63,11 @@ fn exec_echo(args: Vec<String>) {
 
 fn exec_type(args: Vec<String>) -> Result<(), VarError> {
     for arg in args {
-        match BuiltinCommand::try_from(arg.as_str()) {
-            Ok(comm) => {
-                println!("{} is a shell builtin", comm)
+        match BuiltinCommand::from(arg.as_str()) {
+            BuiltinCommand::Exit | BuiltinCommand::Echo | BuiltinCommand::Type => {
+                println!("{} is a shell builtin", arg)
             }
-            Err(_) => {
+            _ => {
                 let finder = PathFinder::new(arg.clone())?;
                 match finder.find_executable() {
                     Some(path) => println!("{} is {}", arg, path.display()),
@@ -70,5 +76,16 @@ fn exec_type(args: Vec<String>) -> Result<(), VarError> {
             }
         }
     }
+    Ok(())
+}
+
+fn exec_run(program: String, args: Vec<String>) -> Result<(), InputError> {
+    // if none of this returns error, the program exists and has exec perms
+    PathFinder::new(program.clone())?
+        .find_executable()
+        .ok_or(InputError::CommandNotFound(program.clone()))?;
+
+    std::process::Command::new(program).args(args).status()?;
+
     Ok(())
 }

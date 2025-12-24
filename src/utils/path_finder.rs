@@ -25,13 +25,9 @@ impl PathFinder {
     }
 
     pub fn find_executable(self) -> Option<PathBuf> {
-        for candidate in self.candidates {
-            match has_exec_permissions(&candidate) {
-                Ok(_) => return Some(candidate),
-                Err(_) => continue,
-            }
-        }
-        None
+        self.candidates
+            .into_iter()
+            .find(|candidate| has_exec_permissions(candidate).unwrap_or(false))
     }
 }
 
