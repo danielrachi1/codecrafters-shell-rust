@@ -1,7 +1,7 @@
+use super::path_finder::PathFinder;
 use crate::InputError;
+use std::env::VarError;
 use std::ops::ControlFlow;
-use std::os::unix::fs::MetadataExt;
-use std::path::PathBuf;
 
 #[derive(Debug)]
 pub enum BuiltinCommand {
@@ -37,36 +37,38 @@ impl BuiltinCommand {
         match self {
             BuiltinCommand::Exit => ControlFlow::Break(()),
             BuiltinCommand::Echo => {
-                for arg in args {
-                    print!("{} ", arg);
-                }
-                println!();
+                exec_echo(args);
                 ControlFlow::Continue(())
             }
             BuiltinCommand::Type => {
-                for arg in args {
-                    match BuiltinCommand::try_from(arg.as_str()) {
-                        Ok(comm) => println!("{} is a shell builtin", comm),
-                        Err(_) => {
-                            let mut found = false;
-                            for dir in std::env::var("PATH").unwrap_or_default().split(":") {
-                                let path: PathBuf = [dir, arg.as_str()].iter().collect();
-                                if let Ok(metadata) = path.metadata()
-                                    && metadata.mode() & 0o111 != 0
-                                {
-                                    println!("{} is {}", arg, path.display());
-                                    found = true;
-                                    break;
-                                }
-                            }
-                            if !found {
-                                println!("{}: not found", arg);
-                            }
-                        }
-                    }
-                }
+                let _ = exec_type(args);
                 ControlFlow::Continue(())
             }
         }
     }
+}
+
+fn exec_echo(args: Vec<String>) {
+    for arg in args {
+        print!("{} ", arg);
+    }
+    println!();
+}
+
+fn exec_type(args: Vec<String>) -> Result<(), VarError> {
+    for arg in args {
+        match BuiltinCommand::try_from(arg.as_str()) {
+            Ok(comm) => {
+                println!("{} is a shell builtin", comm)
+            }
+            Err(_) => {
+                let finder = PathFinder::new(arg.clone())?;
+                match finder.find_executable() {
+                    Some(path) => println!("{} is {}", arg, path.display()),
+                    None => println!("{}: not found", arg),
+                }
+            }
+        }
+    }
+    Ok(())
 }
