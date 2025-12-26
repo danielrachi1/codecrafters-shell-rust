@@ -10,6 +10,7 @@ pub enum BuiltinCommand {
     Echo,
     Type,
     Run(String),
+    Pwd,
 }
 
 impl From<&str> for BuiltinCommand {
@@ -18,6 +19,7 @@ impl From<&str> for BuiltinCommand {
             "exit" => BuiltinCommand::Exit,
             "echo" => BuiltinCommand::Echo,
             "type" => BuiltinCommand::Type,
+            "pwd" => BuiltinCommand::Pwd,
             _ => BuiltinCommand::Run(value.to_string()),
         }
     }
@@ -30,6 +32,7 @@ impl std::fmt::Display for BuiltinCommand {
             BuiltinCommand::Echo => write!(f, "echo"),
             BuiltinCommand::Type => write!(f, "type"),
             BuiltinCommand::Run(program) => write!(f, "run: {}", program),
+            BuiltinCommand::Pwd => write!(f, "pwd"),
         }
     }
 }
@@ -50,6 +53,10 @@ impl BuiltinCommand {
                 exec_run(program, args)?;
                 Ok(ControlFlow::Continue(()))
             }
+            BuiltinCommand::Pwd => {
+                exec_pwd()?;
+                Ok(ControlFlow::Continue(()))
+            }
         }
     }
 }
@@ -64,7 +71,10 @@ fn exec_echo(args: Vec<String>) {
 fn exec_type(args: Vec<String>) -> Result<(), VarError> {
     for arg in args {
         match BuiltinCommand::from(arg.as_str()) {
-            BuiltinCommand::Exit | BuiltinCommand::Echo | BuiltinCommand::Type => {
+            BuiltinCommand::Exit
+            | BuiltinCommand::Echo
+            | BuiltinCommand::Type
+            | BuiltinCommand::Pwd => {
                 println!("{} is a shell builtin", arg)
             }
             _ => {
@@ -87,5 +97,11 @@ fn exec_run(program: String, args: Vec<String>) -> Result<(), InputError> {
 
     std::process::Command::new(program).args(args).status()?;
 
+    Ok(())
+}
+
+fn exec_pwd() -> Result<(), InputError> {
+    let path = std::env::current_dir()?;
+    println!("{}", path.display());
     Ok(())
 }
