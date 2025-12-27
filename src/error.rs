@@ -11,6 +11,10 @@ pub enum InputError {
     CantReadEnvPath(VarError),
     #[error("error executing command: {0}")]
     CommandExecutionError(io::Error),
+    #[error("too many arguments")]
+    TooManyArguments,
+    #[error("failed to get home dir")]
+    HomeDirFail,
 }
 
 impl From<VarError> for InputError {

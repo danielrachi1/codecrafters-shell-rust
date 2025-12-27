@@ -1,7 +1,7 @@
 use crate::error::InputError;
 
 use super::path_finder::PathFinder;
-use std::env::VarError;
+use std::env::{self, VarError};
 use std::ops::ControlFlow;
 
 #[derive(Debug)]
@@ -11,6 +11,7 @@ pub enum BuiltinCommand {
     Type,
     Run(String),
     Pwd,
+    Cd,
 }
 
 impl From<&str> for BuiltinCommand {
@@ -20,6 +21,7 @@ impl From<&str> for BuiltinCommand {
             "echo" => BuiltinCommand::Echo,
             "type" => BuiltinCommand::Type,
             "pwd" => BuiltinCommand::Pwd,
+            "cd" => BuiltinCommand::Cd,
             _ => BuiltinCommand::Run(value.to_string()),
         }
     }
@@ -33,6 +35,7 @@ impl std::fmt::Display for BuiltinCommand {
             BuiltinCommand::Type => write!(f, "type"),
             BuiltinCommand::Run(program) => write!(f, "run: {}", program),
             BuiltinCommand::Pwd => write!(f, "pwd"),
+            BuiltinCommand::Cd => write!(f, "cd"),
         }
     }
 }
@@ -57,6 +60,10 @@ impl BuiltinCommand {
                 exec_pwd()?;
                 Ok(ControlFlow::Continue(()))
             }
+            BuiltinCommand::Cd => {
+                exec_cd(args)?;
+                Ok(ControlFlow::Continue(()))
+            }
         }
     }
 }
@@ -74,7 +81,8 @@ fn exec_type(args: Vec<String>) -> Result<(), VarError> {
             BuiltinCommand::Exit
             | BuiltinCommand::Echo
             | BuiltinCommand::Type
-            | BuiltinCommand::Pwd => {
+            | BuiltinCommand::Pwd
+            | BuiltinCommand::Cd => {
                 println!("{} is a shell builtin", arg)
             }
             _ => {
@@ -104,4 +112,20 @@ fn exec_pwd() -> Result<(), InputError> {
     let path = std::env::current_dir()?;
     println!("{}", path.display());
     Ok(())
+}
+
+fn exec_cd(args: Vec<String>) -> Result<(), InputError> {
+    if args.len() > 1 {
+        Err(InputError::TooManyArguments)
+    } else {
+        env::set_current_dir(
+            args.first().unwrap_or(
+                &env::home_dir()
+                    .ok_or(InputError::HomeDirFail)?
+                    .to_string_lossy()
+                    .into(),
+            ),
+        )?;
+        Ok(())
+    }
 }
