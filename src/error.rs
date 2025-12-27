@@ -18,8 +18,8 @@ pub enum ExecutionError {
     CurrentDirError(io::Error),
     #[error("failed to get home dir")]
     HomeDirFail,
-    #[error("failed to change working dir: {0}")]
-    ChdirFail(io::Error),
+    #[error("cd: {0}: {1}")]
+    ChdirFail(String, String),
     #[error("failed to execute OS process: {0}")]
     OsProcessError(io::Error),
 }

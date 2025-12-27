@@ -2,6 +2,7 @@ use crate::error::ExecutionError;
 
 use super::path_finder::PathFinder;
 use std::env;
+use std::io::ErrorKind;
 use std::ops::ControlFlow;
 
 #[derive(Debug)]
@@ -120,14 +121,20 @@ fn exec_pwd() -> Result<(), ExecutionError> {
 }
 
 fn exec_cd(args: Vec<String>) -> Result<(), ExecutionError> {
-    env::set_current_dir(
-        args.first().unwrap_or(
-            &env::home_dir()
-                .ok_or(ExecutionError::HomeDirFail)?
-                .to_string_lossy()
-                .into(),
-        ),
-    )
-    .map_err(ExecutionError::ChdirFail)?;
+    let path = if let Some(p) = args.first() {
+        p.clone()
+    } else {
+        env::home_dir()
+            .ok_or(ExecutionError::HomeDirFail)?
+            .to_string_lossy()
+            .into()
+    };
+    env::set_current_dir(&path).map_err(|err| {
+        let error_message = match err.kind() {
+            ErrorKind::NotFound => "No such file or directory".to_string(),
+            _ => err.kind().to_string(),
+        };
+        ExecutionError::ChdirFail(path.clone(), error_message)
+    })?;
     Ok(())
 }
