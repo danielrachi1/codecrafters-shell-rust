@@ -121,13 +121,14 @@ fn exec_pwd() -> Result<(), ExecutionError> {
 }
 
 fn exec_cd(args: Vec<String>) -> Result<(), ExecutionError> {
+    let home = env::home_dir()
+        .ok_or(ExecutionError::HomeDirFail)?
+        .to_string_lossy()
+        .into();
     let path = if let Some(p) = args.first() {
-        p.clone()
+        if p == "~" { home } else { p.clone() }
     } else {
-        env::home_dir()
-            .ok_or(ExecutionError::HomeDirFail)?
-            .to_string_lossy()
-            .into()
+        home
     };
     env::set_current_dir(&path).map_err(|err| {
         let error_message = match err.kind() {
