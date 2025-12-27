@@ -1,7 +1,7 @@
-use crate::error::InputError;
+use crate::error::ExecutionError;
 
 use super::path_finder::PathFinder;
-use std::env::{self, VarError};
+use std::env;
 use std::ops::ControlFlow;
 
 #[derive(Debug)]
@@ -41,7 +41,7 @@ impl std::fmt::Display for BuiltinCommand {
 }
 
 impl BuiltinCommand {
-    pub fn execute(self, args: Vec<String>) -> Result<ControlFlow<()>, InputError> {
+    pub fn execute(self, args: Vec<String>) -> Result<ControlFlow<()>, ExecutionError> {
         match self {
             BuiltinCommand::Exit => Ok(ControlFlow::Break(())),
             BuiltinCommand::Echo => {
@@ -75,7 +75,7 @@ fn exec_echo(args: Vec<String>) {
     println!();
 }
 
-fn exec_type(args: Vec<String>) -> Result<(), VarError> {
+fn exec_type(args: Vec<String>) -> Result<(), ExecutionError> {
     for arg in args {
         match BuiltinCommand::from(arg.as_str()) {
             BuiltinCommand::Exit
@@ -86,7 +86,8 @@ fn exec_type(args: Vec<String>) -> Result<(), VarError> {
                 println!("{} is a shell builtin", arg)
             }
             _ => {
-                let finder = PathFinder::new(arg.clone())?;
+                let finder =
+                    PathFinder::new(arg.clone()).map_err(ExecutionError::CantReadEnvPath)?;
                 match finder.find_executable() {
                     Some(path) => println!("{} is {}", arg, path.display()),
                     None => println!("{}: not found", arg),
@@ -97,35 +98,36 @@ fn exec_type(args: Vec<String>) -> Result<(), VarError> {
     Ok(())
 }
 
-fn exec_run(program: String, args: Vec<String>) -> Result<(), InputError> {
+fn exec_run(program: String, args: Vec<String>) -> Result<(), ExecutionError> {
     // if none of this returns error, the program exists and has exec perms
-    PathFinder::new(program.clone())?
+    PathFinder::new(program.clone())
+        .map_err(ExecutionError::CantReadEnvPath)?
         .find_executable()
-        .ok_or(InputError::CommandNotFound(program.clone()))?;
+        .ok_or(ExecutionError::CommandNotFound(program.clone()))?;
 
-    std::process::Command::new(program).args(args).status()?;
+    std::process::Command::new(program)
+        .args(args)
+        .status()
+        .map_err(ExecutionError::OsProcessError)?;
 
     Ok(())
 }
 
-fn exec_pwd() -> Result<(), InputError> {
-    let path = std::env::current_dir()?;
+fn exec_pwd() -> Result<(), ExecutionError> {
+    let path = std::env::current_dir().map_err(ExecutionError::CurrentDirError)?;
     println!("{}", path.display());
     Ok(())
 }
 
-fn exec_cd(args: Vec<String>) -> Result<(), InputError> {
-    if args.len() > 1 {
-        Err(InputError::TooManyArguments)
-    } else {
-        env::set_current_dir(
-            args.first().unwrap_or(
-                &env::home_dir()
-                    .ok_or(InputError::HomeDirFail)?
-                    .to_string_lossy()
-                    .into(),
-            ),
-        )?;
-        Ok(())
-    }
+fn exec_cd(args: Vec<String>) -> Result<(), ExecutionError> {
+    env::set_current_dir(
+        args.first().unwrap_or(
+            &env::home_dir()
+                .ok_or(ExecutionError::HomeDirFail)?
+                .to_string_lossy()
+                .into(),
+        ),
+    )
+    .map_err(ExecutionError::ChdirFail)?;
+    Ok(())
 }

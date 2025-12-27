@@ -1,30 +1,25 @@
-use std::env::VarError;
-use std::io;
+use std::{env::VarError, io};
 
 #[derive(thiserror::Error, Debug)]
 pub enum InputError {
-    #[error("{0}: command not found")]
-    CommandNotFound(String),
     #[error("provided command is an empty string")]
     EmptyCommand,
-    #[error("error reading PATH environment variable: {0}")]
-    CantReadEnvPath(VarError),
-    #[error("error executing command: {0}")]
-    CommandExecutionError(io::Error),
     #[error("too many arguments")]
     TooManyArguments,
+}
+
+#[derive(thiserror::Error, Debug)]
+pub enum ExecutionError {
+    #[error("{0}: command not found")]
+    CommandNotFound(String),
+    #[error("error reading PATH environment variable: {0}")]
+    CantReadEnvPath(VarError),
+    #[error("error getting the current directory path: {0}")]
+    CurrentDirError(io::Error),
     #[error("failed to get home dir")]
     HomeDirFail,
-}
-
-impl From<VarError> for InputError {
-    fn from(value: VarError) -> Self {
-        InputError::CantReadEnvPath(value)
-    }
-}
-
-impl From<io::Error> for InputError {
-    fn from(value: io::Error) -> Self {
-        InputError::CommandExecutionError(value)
-    }
+    #[error("failed to change working dir: {0}")]
+    ChdirFail(io::Error),
+    #[error("failed to execute OS process: {0}")]
+    OsProcessError(io::Error),
 }
