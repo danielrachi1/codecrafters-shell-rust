@@ -3,6 +3,7 @@ enum State {
     SingleQuote,
     DoubleQuote,
     Escaped,
+    DoubleQuoteEscaped,
 }
 
 pub struct ArgumentParser {
@@ -46,17 +47,30 @@ impl ArgumentParser {
                         self.current_word.push(c);
                     }
                 }
-                State::DoubleQuote => {
-                    if c == '"' {
-                        self.mode = State::Normal;
-                    } else {
-                        self.current_word.push(c);
-                    }
-                }
+                State::DoubleQuote => match c {
+                    '"' => self.mode = State::Normal,
+                    '\\' => self.mode = State::DoubleQuoteEscaped,
+                    _ => self.current_word.push(c),
+                },
                 State::Escaped => {
                     self.current_word.push(c);
                     self.mode = State::Normal;
                 }
+                State::DoubleQuoteEscaped => match c {
+                    '"' => {
+                        self.current_word.push(c);
+                        self.mode = State::DoubleQuote
+                    }
+                    '\\' => {
+                        self.current_word.push(c);
+                        self.mode = State::DoubleQuote
+                    }
+                    _ => {
+                        self.current_word.push('\\');
+                        self.current_word.push(c);
+                        self.mode = State::DoubleQuote
+                    }
+                },
             }
         }
         if !self.current_word.is_empty() {
