@@ -7,7 +7,7 @@ pub struct Input {
 }
 
 impl Input {
-    pub fn new(buf: &mut str) -> Result<Input, InputError> {
+    pub fn new(buf: String) -> Result<Input, InputError> {
         let buf_tup = buf.split_once(" ").ok_or(InputError::EmptyCommand)?;
         let command = buf_tup.0.into();
         let args = split_args(buf_tup.1);

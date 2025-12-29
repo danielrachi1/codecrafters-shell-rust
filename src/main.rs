@@ -13,10 +13,16 @@ fn main() {
         print!("$ ");
         io::stdout().flush().unwrap();
 
-        let mut buf = String::new();
-        io::stdin().read_line(&mut buf).unwrap();
+        let mut mut_buf = String::new();
+        io::stdin().read_line(&mut mut_buf).unwrap();
 
-        let input = match Input::new(&mut buf) {
+        let buf = mut_buf;
+
+        if buf.trim().is_empty() {
+            continue;
+        }
+
+        let input = match Input::new(buf) {
             Ok(input) => input,
             Err(error) => {
                 println!("{}", error);
