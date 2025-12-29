@@ -2,8 +2,6 @@ use std::{env::VarError, io};
 
 #[derive(thiserror::Error, Debug)]
 pub enum InputError {
-    #[error("provided command is an empty string")]
-    EmptyCommand,
     #[error("too many arguments")]
     TooManyArguments,
 }

@@ -123,11 +123,7 @@ fn exec_cd(args: Vec<String>) -> Result<(), ExecutionError> {
         .to_string_lossy()
         .into();
     let path = if let Some(p) = args.first() {
-        if p == "~" {
-            home
-        } else {
-            p.clone()
-        }
+        if p == "~" { home } else { p.clone() }
     } else {
         home
     };
