@@ -70,10 +70,7 @@ impl BuiltinCommand {
 }
 
 fn exec_echo(args: Vec<String>) {
-    for arg in args {
-        print!("{} ", arg);
-    }
-    println!();
+    println!("{}", args.join(" "));
 }
 
 fn exec_type(args: Vec<String>) -> Result<(), ExecutionError> {
@@ -126,7 +123,11 @@ fn exec_cd(args: Vec<String>) -> Result<(), ExecutionError> {
         .to_string_lossy()
         .into();
     let path = if let Some(p) = args.first() {
-        if p == "~" { home } else { p.clone() }
+        if p == "~" {
+            home
+        } else {
+            p.clone()
+        }
     } else {
         home
     };
