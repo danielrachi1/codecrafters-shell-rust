@@ -1,5 +1,6 @@
 use crate::BuiltinCommand;
 use crate::InputError;
+use crate::utils::argument_parser::*;
 
 pub struct Input {
     pub command: BuiltinCommand,
@@ -10,7 +11,7 @@ impl Input {
     pub fn new(buf: String) -> Result<Input, InputError> {
         let buf_tup = buf.split_once(" ").unwrap_or((buf.trim(), ""));
         let command = buf_tup.0.into();
-        let args = split_args(buf_tup.1);
+        let args = ArgumentParser::new(buf_tup.1.to_string()).parse();
         Input { command, args }.check_args()
     }
 
@@ -26,19 +27,4 @@ impl Input {
             _ => Ok(self),
         }
     }
-}
-
-fn split_args(args: &str) -> Vec<String> {
-    let mut quote_flag = false;
-    args.split(|c: char| {
-        if c == '\'' {
-            quote_flag = !quote_flag;
-            false
-        } else {
-            c.is_whitespace() & !quote_flag
-        }
-    })
-    .filter(|arg| !arg.is_empty())
-    .map(|arg| arg.replace("'", ""))
-    .collect()
 }
