@@ -2,6 +2,7 @@ enum State {
     Normal,
     SingleQuote,
     DoubleQuote,
+    Escaped,
 }
 
 pub struct ArgumentParser {
@@ -35,6 +36,7 @@ impl ArgumentParser {
                     }
                     '\'' => self.mode = State::SingleQuote,
                     '\"' => self.mode = State::DoubleQuote,
+                    '\\' => self.mode = State::Escaped,
                     _ => self.current_word.push(c),
                 },
                 State::SingleQuote => {
@@ -50,6 +52,10 @@ impl ArgumentParser {
                     } else {
                         self.current_word.push(c);
                     }
+                }
+                State::Escaped => {
+                    self.current_word.push(c);
+                    self.mode = State::Normal;
                 }
             }
         }

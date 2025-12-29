@@ -1,6 +1,6 @@
-use crate::utils::argument_parser::*;
 use crate::BuiltinCommand;
 use crate::InputError;
+use crate::utils::argument_parser::*;
 
 pub struct Input {
     pub command: BuiltinCommand,
