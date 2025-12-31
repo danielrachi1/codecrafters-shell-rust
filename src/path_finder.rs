@@ -1,18 +1,14 @@
 use std::os::unix::fs::MetadataExt;
 use std::path::Path;
-use std::{
-    env::{self, VarError},
-    io,
-    path::PathBuf,
-};
+use std::{env, io, path::PathBuf};
 
 pub struct PathFinder {
     candidates: Vec<PathBuf>,
 }
 
 impl PathFinder {
-    pub fn new(executable: String) -> Result<PathFinder, VarError> {
-        let path_string = std::env::var("PATH")?;
+    pub fn new(executable: String) -> PathFinder {
+        let path_string = std::env::var_os("PATH").expect("PATH enviroment variable must be set");
         let candidates = env::split_paths(&path_string)
             .map(|dir| {
                 let mut path = dir.clone();
@@ -21,7 +17,7 @@ impl PathFinder {
             })
             .collect();
 
-        Ok(PathFinder { candidates })
+        PathFinder { candidates }
     }
 
     pub fn find_executable(self) -> Option<PathBuf> {

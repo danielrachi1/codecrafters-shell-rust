@@ -20,7 +20,7 @@ pub fn r#type(args: Vec<String>) -> ControlFlow<()> {
                 println!("{} is a shell builtin", arg)
             }
             Err(_) => {
-                let finder = PathFinder::new(arg.clone()).unwrap();
+                let finder = PathFinder::new(arg.clone());
                 match finder.find_executable() {
                     Some(path) => println!("{} is {}", arg, path.display()),
                     None => println!("{}: not found", arg),

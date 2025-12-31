@@ -1,6 +1,7 @@
 mod argument_parser;
 mod builtin_command;
 mod command;
+mod error;
 mod input;
 mod order;
 mod output;
@@ -8,13 +9,12 @@ mod path_finder;
 mod runner;
 mod shell;
 
-use std::ops::ControlFlow;
-
-use output::Output;
+use std::{io::Write, ops::ControlFlow};
 
 fn main() {
     loop {
-        shell::output(Output::StdOut, "$ ".to_string());
+        print!("$ ");
+        std::io::stdout().flush().unwrap();
 
         let Some(order) = shell::input() else {
             continue;
