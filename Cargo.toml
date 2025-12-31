@@ -6,4 +6,3 @@ edition = "2024"
 rust-version = "1.91"
 
 [dependencies]
-thiserror = "2.0.17"

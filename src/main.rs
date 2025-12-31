@@ -1,42 +1,28 @@
-#[allow(unused_imports)]
-use std::io::{self, Write};
+mod argument_parser;
+mod builtin_command;
+mod command;
+mod input;
+mod order;
+mod output;
+mod path_finder;
+mod runner;
+mod shell;
 
-mod error;
-mod utils;
+use std::ops::ControlFlow;
 
-use error::InputError;
-use utils::builtin_command::BuiltinCommand;
-use utils::input::Input;
+use output::Output;
 
 fn main() {
     loop {
-        print!("$ ");
-        io::stdout().flush().unwrap();
+        shell::output(Output::StdOut, "$ ".to_string());
 
-        let mut mut_buf = String::new();
-        io::stdin().read_line(&mut mut_buf).unwrap();
-
-        let buf = mut_buf;
-
-        if buf.trim().is_empty() {
+        let Some(order) = shell::input() else {
             continue;
-        }
-
-        let input = match Input::new(buf) {
-            Ok(input) => input,
-            Err(error) => {
-                println!("{}", error);
-                continue;
-            }
         };
 
-        match input.command.execute(input.args) {
-            Ok(exec) => {
-                if exec.is_break() {
-                    break;
-                }
-            }
-            Err(err) => eprintln!("{}", err),
+        match order.execute() {
+            ControlFlow::Continue(_) => continue,
+            ControlFlow::Break(_) => break,
         }
     }
 }
