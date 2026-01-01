@@ -4,7 +4,6 @@ mod command;
 mod error;
 mod input;
 mod order;
-mod output;
 mod path_finder;
 mod runner;
 mod shell;
