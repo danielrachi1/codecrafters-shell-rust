@@ -33,20 +33,23 @@ pub fn r#type(args: Vec<String>) -> ControlFlow<()> {
 }
 
 pub fn pwd() -> ControlFlow<()> {
-    let path = std::env::current_dir().unwrap();
+    let path = std::env::current_dir().expect("couldn't acess current working directory");
     println!("{}", path.display());
 
     ControlFlow::Continue(())
 }
 
 pub fn cd(args: Vec<String>) -> ControlFlow<()> {
-    let home = env::home_dir().unwrap().to_string_lossy().into();
+    let home = env::home_dir()
+        .expect("couldn't get path of current user's HOME directory")
+        .to_string_lossy()
+        .into();
     let path = if let Some(p) = args.first() {
         if p == "~" { home } else { p.clone() }
     } else {
         home
     };
-    env::set_current_dir(&path).unwrap();
+    env::set_current_dir(&path).expect("couldn't change current working dir");
 
     ControlFlow::Continue(())
 }
