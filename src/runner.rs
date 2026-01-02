@@ -10,12 +10,12 @@ pub fn exit() -> ControlFlow<()> {
     ControlFlow::Break(())
 }
 
-pub fn echo(args: Vec<String>, mut output: Output) -> ControlFlow<()> {
+pub fn echo(args: &[String], mut output: Output) -> ControlFlow<()> {
     writeln!(output, "{}", args.join(" ")).unwrap();
     ControlFlow::Continue(())
 }
 
-pub fn r#type(args: Vec<String>, mut output: Output) -> ControlFlow<()> {
+pub fn r#type(args: &Vec<String>, mut output: Output) -> ControlFlow<()> {
     for arg in args {
         match BuiltinCommand::try_from(arg.clone()) {
             Ok(_) => {
@@ -39,25 +39,21 @@ pub fn pwd(mut output: Output) -> ControlFlow<()> {
     ControlFlow::Continue(())
 }
 
-pub fn cd(args: Vec<String>) -> ControlFlow<()> {
+pub fn cd(args: &[String]) -> std::io::Result<ControlFlow<()>> {
     let home = env::home_dir()
         .expect("couldn't get path of current user's HOME directory")
         .to_string_lossy()
         .into();
     let path = if let Some(p) = args.first() {
-        if p == "~" {
-            home
-        } else {
-            p.clone()
-        }
+        if p == "~" { home } else { p.clone() }
     } else {
         home
     };
-    env::set_current_dir(&path).expect("couldn't change current working dir");
-    ControlFlow::Continue(())
+    env::set_current_dir(&path)?;
+    Ok(ControlFlow::Continue(()))
 }
 
-pub fn executable(path: PathBuf, args: Vec<String>, mut output: Output) -> ControlFlow<()> {
+pub fn executable(path: &PathBuf, args: &Vec<String>, mut output: Output) -> ControlFlow<()> {
     let command_out = std::process::Command::new(path)
         .args(args)
         .output()

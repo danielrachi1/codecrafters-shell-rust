@@ -21,3 +21,15 @@ impl TryFrom<String> for BuiltinCommand {
         }
     }
 }
+
+impl std::fmt::Display for BuiltinCommand {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            BuiltinCommand::Exit => write!(f, "exit"),
+            BuiltinCommand::Echo => write!(f, "echo"),
+            BuiltinCommand::Type => write!(f, "type"),
+            BuiltinCommand::Pwd => write!(f, "pwd"),
+            BuiltinCommand::Cd => write!(f, "cd"),
+        }
+    }
+}

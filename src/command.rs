@@ -22,3 +22,12 @@ impl TryFrom<String> for Command {
         }
     }
 }
+
+impl std::fmt::Display for Command {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Command::Builtin(builtin_command) => write!(f, "{}", builtin_command),
+            Command::Executable(path) => write!(f, "{}", path.display()),
+        }
+    }
+}

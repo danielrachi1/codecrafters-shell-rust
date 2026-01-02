@@ -39,13 +39,19 @@ impl Order {
             output,
         } = self;
 
-        match command {
-            Command::Builtin(BuiltinCommand::Exit) => runner::exit(),
-            Command::Builtin(BuiltinCommand::Echo) => runner::echo(args, output),
-            Command::Builtin(BuiltinCommand::Type) => runner::r#type(args, output),
-            Command::Builtin(BuiltinCommand::Pwd) => runner::pwd(output),
-            Command::Builtin(BuiltinCommand::Cd) => runner::cd(args),
-            Command::Executable(path) => runner::executable(path, args, output),
+        let result = match &command {
+            Command::Builtin(BuiltinCommand::Exit) => Ok(runner::exit()),
+            Command::Builtin(BuiltinCommand::Echo) => Ok(runner::echo(&args, output)),
+            Command::Builtin(BuiltinCommand::Type) => Ok(runner::r#type(&args, output)),
+            Command::Builtin(BuiltinCommand::Pwd) => Ok(runner::pwd(output)),
+            Command::Builtin(BuiltinCommand::Cd) => runner::cd(&args),
+            Command::Executable(path) => Ok(runner::executable(path, &args, output)),
+        };
+
+        if let Err(err) = result {
+            eprintln!("{}: {}: {}", command, args.join(" "), err)
         }
+
+        ControlFlow::Continue(())
     }
 }
