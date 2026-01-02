@@ -1,1 +1,1 @@
-pub mod command_not_found;
+pub mod input_error;
