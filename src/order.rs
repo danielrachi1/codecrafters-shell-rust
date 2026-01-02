@@ -47,10 +47,12 @@ impl Order {
             Command::Executable(path) => Ok(runner::executable(path, &args, output)),
         };
 
-        if let Err(err) = result {
-            eprintln!("{}: {}: {}", command, args.join(" "), err)
+        match result {
+            Ok(control_flow) => control_flow,
+            Err(err) => {
+                eprintln!("{}: {}: {}", command, args.join(" "), err);
+                ControlFlow::Continue(())
+            }
         }
-
-        ControlFlow::Continue(())
     }
 }
