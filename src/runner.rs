@@ -5,7 +5,7 @@ use crate::path_finder::PathFinder;
 use std::env;
 use std::io::Write;
 use std::ops::ControlFlow;
-use std::path::PathBuf;
+use std::path::Path;
 
 pub fn exit() -> ControlFlow<()> {
     ControlFlow::Break(())
@@ -54,8 +54,8 @@ pub fn cd(args: &[String]) -> Result<ControlFlow<()>, NotFound> {
     Ok(ControlFlow::Continue(()))
 }
 
-pub fn executable(path: &PathBuf, args: &Vec<String>, mut output: Output) -> ControlFlow<()> {
-    let command_out = std::process::Command::new(path)
+pub fn executable(path: &Path, args: &Vec<String>, mut output: Output) -> ControlFlow<()> {
+    let command_out = std::process::Command::new(path.file_name().unwrap())
         .args(args)
         .output()
         .unwrap();
