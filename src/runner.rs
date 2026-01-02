@@ -1,4 +1,5 @@
 use crate::builtin_command::BuiltinCommand;
+use crate::error::not_found::NotFound;
 use crate::output::Output;
 use crate::path_finder::PathFinder;
 use std::env;
@@ -39,7 +40,7 @@ pub fn pwd(mut output: Output) -> ControlFlow<()> {
     ControlFlow::Continue(())
 }
 
-pub fn cd(args: &[String]) -> std::io::Result<ControlFlow<()>> {
+pub fn cd(args: &[String]) -> Result<ControlFlow<()>, NotFound> {
     let home = env::home_dir()
         .expect("couldn't get path of current user's HOME directory")
         .to_string_lossy()

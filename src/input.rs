@@ -1,6 +1,6 @@
 use crate::argument_parser::ArgumentParser;
 use crate::command::Command;
-use crate::error::input_error::InputError;
+use crate::error::not_found::NotFound;
 use std::io;
 
 pub fn read_input() -> String {
@@ -9,7 +9,7 @@ pub fn read_input() -> String {
     buf.trim().to_string()
 }
 
-pub fn parse_input(input: String) -> Result<(Command, Vec<String>), InputError> {
+pub fn parse_input(input: String) -> Result<(Command, Vec<String>), NotFound> {
     let parsed_input = ArgumentParser::new(input).parse();
     let (command_array, args_array) = parsed_input.split_at(1);
     let command_string = command_array[0].clone();

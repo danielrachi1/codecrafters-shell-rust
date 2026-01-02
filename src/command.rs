@@ -1,5 +1,5 @@
 use crate::builtin_command::BuiltinCommand;
-use crate::error::input_error::InputError;
+use crate::error::not_found::NotFound;
 use crate::path_finder::PathFinder;
 use std::path::PathBuf;
 
@@ -9,7 +9,7 @@ pub enum Command {
 }
 
 impl TryFrom<String> for Command {
-    type Error = InputError;
+    type Error = NotFound;
 
     fn try_from(value: String) -> Result<Self, Self::Error> {
         if let Ok(builtin_command) = BuiltinCommand::try_from(value.clone()) {
@@ -17,7 +17,7 @@ impl TryFrom<String> for Command {
         } else {
             let path = PathFinder::new(value.clone())
                 .find_executable()
-                .ok_or(InputError::CommandNotFound(value))?;
+                .ok_or(NotFound::Command(value))?;
             Ok(Self::Executable(path))
         }
     }

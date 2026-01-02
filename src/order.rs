@@ -1,4 +1,4 @@
-use crate::error::input_error::InputError;
+use crate::error::not_found::NotFound;
 use crate::output::Output;
 use crate::runner;
 use crate::{builtin_command::BuiltinCommand, command::Command};
@@ -12,13 +12,12 @@ pub struct Order {
 }
 
 impl Order {
-    pub fn new(command: Command, mut args: Vec<String>) -> Result<Self, InputError> {
+    pub fn new(command: Command, mut args: Vec<String>) -> Result<Self, NotFound> {
         let mut output_file = None;
 
         if let Some(idx) = args.iter().position(|arg| arg == ">" || arg == "1>") {
             output_file = Some(PathBuf::from(
-                args.get(idx + 1)
-                    .ok_or(InputError::RedirectTargetNotFound)?,
+                args.get(idx + 1).ok_or(NotFound::RedirectTarget)?,
             ));
             args.truncate(idx);
         }
