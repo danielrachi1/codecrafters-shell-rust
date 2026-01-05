@@ -9,7 +9,6 @@ use std::{
 pub struct OutputConfig {
     pub stdout: Output,
     pub stderr: Output,
-    overwrite: bool,
 }
 
 impl Default for OutputConfig {
@@ -17,7 +16,6 @@ impl Default for OutputConfig {
         OutputConfig {
             stdout: Output::StdOut(io::stdout()),
             stderr: Output::StdErr(io::stderr()),
-            overwrite: false,
         }
     }
 }
@@ -31,8 +29,6 @@ impl OutputConfig {
             FileDescriptor::StdErr => self.stderr = file,
         }
 
-        self.overwrite = true;
-
         Ok(self)
     }
 
@@ -43,8 +39,6 @@ impl OutputConfig {
             FileDescriptor::StdOut => self.stdout = file,
             FileDescriptor::StdErr => self.stderr = file,
         }
-
-        self.overwrite = false;
 
         Ok(self)
     }
