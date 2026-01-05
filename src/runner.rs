@@ -1,6 +1,6 @@
 use crate::builtin_command::BuiltinCommand;
 use crate::error::not_found::NotFound;
-use crate::output::Output;
+use crate::output_config::OutputConfig;
 use crate::path_finder::PathFinder;
 use std::env;
 use std::io::Write;
@@ -11,22 +11,24 @@ pub fn exit() -> ControlFlow<()> {
     ControlFlow::Break(())
 }
 
-pub fn echo(args: &[String], mut output: Output) -> ControlFlow<()> {
-    writeln!(output, "{}", args.join(" ")).unwrap();
+pub fn echo(args: &[String], mut output_config: OutputConfig) -> ControlFlow<()> {
+    writeln!(output_config.stdout, "{}", args.join(" ")).unwrap();
     ControlFlow::Continue(())
 }
 
-pub fn r#type(args: &Vec<String>, mut output: Output) -> ControlFlow<()> {
+pub fn r#type(args: &Vec<String>, mut output_config: OutputConfig) -> ControlFlow<()> {
     for arg in args {
         match BuiltinCommand::try_from(arg.clone()) {
             Ok(_) => {
-                writeln!(output, "{} is a shell builtin", arg).unwrap();
+                writeln!(output_config.stdout, "{} is a shell builtin", arg).unwrap();
             }
             Err(_) => {
                 let finder = PathFinder::new(arg.clone());
                 match finder.find_executable() {
-                    Some(path) => writeln!(output, "{} is {}", arg, path.display()).unwrap(),
-                    None => eprintln!("{}: not found", arg),
+                    Some(path) => {
+                        writeln!(output_config.stdout, "{} is {}", arg, path.display()).unwrap()
+                    }
+                    None => writeln!(output_config.stderr, "{}: not found", arg).unwrap(),
                 }
             }
         }
@@ -34,9 +36,9 @@ pub fn r#type(args: &Vec<String>, mut output: Output) -> ControlFlow<()> {
     ControlFlow::Continue(())
 }
 
-pub fn pwd(mut output: Output) -> ControlFlow<()> {
+pub fn pwd(mut output_config: OutputConfig) -> ControlFlow<()> {
     let path = std::env::current_dir().expect("couldn't access current working directory");
-    writeln!(output, "{}", path.display()).unwrap();
+    writeln!(output_config.stdout, "{}", path.display()).unwrap();
     ControlFlow::Continue(())
 }
 
@@ -54,12 +56,16 @@ pub fn cd(args: &[String]) -> Result<ControlFlow<()>, NotFound> {
     Ok(ControlFlow::Continue(()))
 }
 
-pub fn executable(path: &Path, args: &Vec<String>, mut output: Output) -> ControlFlow<()> {
+pub fn executable(
+    path: &Path,
+    args: &Vec<String>,
+    mut output_config: OutputConfig,
+) -> ControlFlow<()> {
     let command_out = std::process::Command::new(path.file_name().unwrap())
         .args(args)
         .output()
         .unwrap();
-    output.write_all(&command_out.stdout).unwrap();
-    std::io::stderr().write_all(&command_out.stderr).unwrap();
+    output_config.stdout.write_all(&command_out.stdout).unwrap();
+    output_config.stderr.write_all(&command_out.stderr).unwrap();
     ControlFlow::Continue(())
 }

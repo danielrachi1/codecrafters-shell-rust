@@ -1,11 +1,11 @@
 use std::{
     fs::File,
-    io::{self, Stdout, Write},
-    path::PathBuf,
+    io::{Stderr, Stdout, Write},
 };
 
 pub enum Output {
     StdOut(Stdout),
+    StdErr(Stderr),
     File(File),
 }
 
@@ -13,6 +13,7 @@ impl Write for Output {
     fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
         match self {
             Output::StdOut(s) => s.write(buf),
+            Output::StdErr(s) => s.write(buf),
             Output::File(f) => f.write(buf),
         }
     }
@@ -20,16 +21,8 @@ impl Write for Output {
     fn flush(&mut self) -> std::io::Result<()> {
         match self {
             Output::StdOut(s) => s.flush(),
+            Output::StdErr(s) => s.flush(),
             Output::File(f) => f.flush(),
-        }
-    }
-}
-
-impl Output {
-    pub fn new(path_opt: &Option<PathBuf>) -> io::Result<Self> {
-        match path_opt {
-            Some(path) => Ok(Output::File(File::create(path)?)),
-            None => Ok(Output::StdOut(io::stdout())),
         }
     }
 }

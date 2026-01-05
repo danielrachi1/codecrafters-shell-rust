@@ -2,6 +2,7 @@
 pub enum NotFound {
     Command(String),
     RedirectTarget,
+    FileDescriptor,
     Io(String),
 }
 
@@ -12,6 +13,10 @@ impl std::fmt::Display for NotFound {
             NotFound::RedirectTarget => {
                 write!(f, "syntax error near unexpected token `newline'")
             }
+            NotFound::FileDescriptor => write!(
+                f,
+                "invalid file descriptor. must be 1>, > (stdout) or 2 (stderr)"
+            ),
             NotFound::Io(msg) => write!(f, "{}", msg),
         }
     }
