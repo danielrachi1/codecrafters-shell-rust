@@ -1,5 +1,4 @@
 use crate::error::not_found::NotFound;
-use crate::file_descriptor::FileDescriptor;
 use crate::output_config::OutputConfig;
 use crate::runner;
 use crate::{builtin_command::BuiltinCommand, command::Command};
@@ -21,8 +20,15 @@ impl Order {
             let redirect_symbol = args.get(idx).unwrap().to_owned();
             let output_file = PathBuf::from(args.get(idx + 1).ok_or(NotFound::RedirectTarget)?);
             args.truncate(idx);
-            OutputConfig::default()
-                .redirect(FileDescriptor::try_from(redirect_symbol)?, output_file)?
+            OutputConfig::default().redirect(redirect_symbol.try_into()?, output_file)?
+        } else if let Some(idx) = args
+            .iter()
+            .position(|arg| arg == ">>" || arg == "1>>" || arg == "2>>")
+        {
+            let redirect_symbol = args.get(idx).unwrap().to_owned();
+            let output_file = PathBuf::from(args.get(idx + 1).ok_or(NotFound::RedirectTarget)?);
+            args.truncate(idx);
+            OutputConfig::default().append(redirect_symbol.try_into()?, output_file)?
         } else {
             OutputConfig::default()
         };
