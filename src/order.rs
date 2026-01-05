@@ -3,7 +3,6 @@ use crate::output_config::OutputConfig;
 use crate::runner;
 use crate::{builtin_command::BuiltinCommand, command::Command};
 use std::ops::ControlFlow;
-use std::path::PathBuf;
 
 pub struct Order {
     command: Command,
@@ -13,25 +12,7 @@ pub struct Order {
 
 impl Order {
     pub fn new(command: Command, mut args: Vec<String>) -> Result<Self, NotFound> {
-        let output_config = if let Some(idx) = args
-            .iter()
-            .position(|arg| arg == ">" || arg == "1>" || arg == "2>")
-        {
-            let redirect_symbol = args.get(idx).unwrap().to_owned();
-            let output_file = PathBuf::from(args.get(idx + 1).ok_or(NotFound::RedirectTarget)?);
-            args.truncate(idx);
-            OutputConfig::default().redirect(redirect_symbol.try_into()?, output_file)?
-        } else if let Some(idx) = args
-            .iter()
-            .position(|arg| arg == ">>" || arg == "1>>" || arg == "2>>")
-        {
-            let redirect_symbol = args.get(idx).unwrap().to_owned();
-            let output_file = PathBuf::from(args.get(idx + 1).ok_or(NotFound::RedirectTarget)?);
-            args.truncate(idx);
-            OutputConfig::default().append(redirect_symbol.try_into()?, output_file)?
-        } else {
-            OutputConfig::default()
-        };
+        let output_config = OutputConfig::new(&mut args)?;
 
         Ok(Order {
             command,
