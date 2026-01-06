@@ -10,20 +10,22 @@ mod path_finder;
 mod runner;
 mod shell;
 
-use std::{io::Write, ops::ControlFlow};
+use rustyline::{DefaultEditor, Result};
+use std::ops::ControlFlow;
 
-fn main() {
+fn main() -> Result<()> {
+    let mut rl = DefaultEditor::new()?;
+
     loop {
-        print!("$ ");
-        std::io::stdout().flush().unwrap();
+        let line = rl.readline("$ ")?;
 
-        let Some(order) = shell::input() else {
+        let Some(order) = shell::input(line) else {
             continue;
         };
 
         match order.execute() {
             ControlFlow::Continue(_) => continue,
-            ControlFlow::Break(_) => break,
+            ControlFlow::Break(_) => break Ok(()),
         }
     }
 }
