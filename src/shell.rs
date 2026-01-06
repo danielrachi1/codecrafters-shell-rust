@@ -10,13 +10,7 @@ pub fn input() -> Option<Order> {
 
     let parsed_input = input::parse_input(input_string);
     match parsed_input {
-        Ok((command, args)) => match Order::new(command, args) {
-            Ok(order) => Some(order),
-            Err(err) => {
-                println!("{}", err);
-                None
-            }
-        },
+        Ok((command, args, output_conf)) => Some(Order::new(command, args, output_conf)),
         Err(err) => {
             eprintln!("{}", err);
             None

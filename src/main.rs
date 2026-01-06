@@ -2,7 +2,6 @@ mod argument_parser;
 mod builtin_command;
 mod command;
 mod error;
-mod file_descriptor;
 mod input;
 mod order;
 mod output;

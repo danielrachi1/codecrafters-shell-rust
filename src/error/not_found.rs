@@ -1,8 +1,8 @@
 #[derive(Debug)]
 pub enum NotFound {
     Command(String),
-    RedirectTarget,
-    FileDescriptor,
+    RedirectTargetFile,
+    OutputConfigSymbol,
     Io(String),
 }
 
@@ -10,12 +10,12 @@ impl std::fmt::Display for NotFound {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             NotFound::Command(command) => write!(f, "{}: command not found", command),
-            NotFound::RedirectTarget => {
+            NotFound::RedirectTargetFile => {
                 write!(f, "syntax error near unexpected token `newline'")
             }
-            NotFound::FileDescriptor => write!(
+            NotFound::OutputConfigSymbol => write!(
                 f,
-                "invalid file descriptor. must be 1>, > (stdout) or 2 (stderr)"
+                "invalid output config symbol. must be >, 1>, 2>, >>, 1>>< 2>>"
             ),
             NotFound::Io(msg) => write!(f, "{}", msg),
         }

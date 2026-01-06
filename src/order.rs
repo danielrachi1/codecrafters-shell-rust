@@ -1,4 +1,3 @@
-use crate::error::not_found::NotFound;
 use crate::output_config::OutputConfig;
 use crate::runner;
 use crate::{builtin_command::BuiltinCommand, command::Command};
@@ -11,14 +10,12 @@ pub struct Order {
 }
 
 impl Order {
-    pub fn new(command: Command, mut args: Vec<String>) -> Result<Self, NotFound> {
-        let output_config = OutputConfig::new(&mut args)?;
-
-        Ok(Order {
+    pub fn new(command: Command, args: Vec<String>, output_config: OutputConfig) -> Self {
+        Order {
             command,
             args,
             output_config,
-        })
+        }
     }
 
     pub fn execute(self) -> ControlFlow<()> {
