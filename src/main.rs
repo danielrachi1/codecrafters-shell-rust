@@ -2,7 +2,6 @@ mod argument_parser;
 mod builtin_command;
 mod command;
 mod error;
-mod helper;
 mod input;
 mod order;
 mod output;
@@ -10,8 +9,9 @@ mod output_config;
 mod path_bins;
 mod runner;
 mod shell;
+mod shell_helper;
 
-use crate::helper::ShellHelper;
+use crate::shell_helper::ShellHelper;
 use rustyline::{Config, Editor, Result};
 use std::ops::ControlFlow;
 
