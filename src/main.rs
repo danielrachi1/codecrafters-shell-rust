@@ -10,11 +10,13 @@ mod path_finder;
 mod runner;
 mod shell;
 
-use rustyline::{DefaultEditor, Result};
+use rustyline::{Config, Editor, Result};
 use std::ops::ControlFlow;
 
 fn main() -> Result<()> {
-    let mut rl = DefaultEditor::new()?;
+    let config = Config::builder().auto_add_history(true).build();
+    let history = rustyline::sqlite_history::SQLiteHistory::with_config(&config)?;
+    let mut rl: Editor<(), _> = Editor::with_history(config, history)?;
 
     loop {
         let line = rl.readline("$ ")?;
