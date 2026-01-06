@@ -1,6 +1,6 @@
 use crate::builtin_command::BuiltinCommand;
 use crate::error::not_found::NotFound;
-use crate::path_finder::PathFinder;
+use crate::path_bins::PathBins;
 use std::path::PathBuf;
 
 pub enum Command {
@@ -15,10 +15,12 @@ impl TryFrom<String> for Command {
         if let Ok(builtin_command) = BuiltinCommand::try_from(value.clone()) {
             Ok(Self::Builtin(builtin_command))
         } else {
-            let path = PathFinder::new(value.clone())
-                .find_executable()
-                .ok_or(NotFound::Command(value))?;
-            Ok(Self::Executable(path))
+            let path = PathBins::new()?.0.contains(&value.clone().into());
+            if path {
+                Ok(Self::Executable(value.into()))
+            } else {
+                Err(NotFound::Command(value))
+            }
         }
     }
 }

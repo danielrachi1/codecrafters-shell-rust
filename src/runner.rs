@@ -1,7 +1,7 @@
 use crate::builtin_command::BuiltinCommand;
 use crate::error::not_found::NotFound;
 use crate::output_config::OutputConfig;
-use crate::path_finder::PathFinder;
+use crate::path_bins::PathBins;
 use std::env;
 use std::io::Write;
 use std::ops::ControlFlow;
@@ -16,24 +16,29 @@ pub fn echo(args: &[String], mut output_config: OutputConfig) -> ControlFlow<()>
     ControlFlow::Continue(())
 }
 
-pub fn r#type(args: &Vec<String>, mut output_config: OutputConfig) -> ControlFlow<()> {
+pub fn r#type(
+    args: &Vec<String>,
+    mut output_config: OutputConfig,
+) -> Result<ControlFlow<()>, NotFound> {
     for arg in args {
         match BuiltinCommand::try_from(arg.clone()) {
             Ok(_) => {
                 writeln!(output_config.stdout, "{} is a shell builtin", arg).unwrap();
             }
             Err(_) => {
-                let finder = PathFinder::new(arg.clone());
-                match finder.find_executable() {
-                    Some(path) => {
-                        writeln!(output_config.stdout, "{} is {}", arg, path.display()).unwrap()
-                    }
-                    None => writeln!(output_config.stderr, "{}: not found", arg).unwrap(),
+                if let Some(path) = PathBins::new()?
+                    .0
+                    .iter()
+                    .find(|bin| &bin.file_name().unwrap().to_string_lossy() == arg)
+                {
+                    writeln!(output_config.stdout, "{} is {}", arg, path.display()).unwrap()
+                } else {
+                    writeln!(output_config.stderr, "{}: not found", arg).unwrap()
                 }
             }
         }
     }
-    ControlFlow::Continue(())
+    Ok(ControlFlow::Continue(()))
 }
 
 pub fn pwd(mut output_config: OutputConfig) -> ControlFlow<()> {

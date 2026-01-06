@@ -7,7 +7,7 @@ mod input;
 mod order;
 mod output;
 mod output_config;
-mod path_finder;
+mod path_bins;
 mod runner;
 mod shell;
 

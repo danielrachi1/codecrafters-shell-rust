@@ -28,7 +28,7 @@ impl Order {
         let result = match &command {
             Command::Builtin(BuiltinCommand::Exit) => Ok(runner::exit()),
             Command::Builtin(BuiltinCommand::Echo) => Ok(runner::echo(&args, output_config)),
-            Command::Builtin(BuiltinCommand::Type) => Ok(runner::r#type(&args, output_config)),
+            Command::Builtin(BuiltinCommand::Type) => runner::r#type(&args, output_config),
             Command::Builtin(BuiltinCommand::Pwd) => Ok(runner::pwd(output_config)),
             Command::Builtin(BuiltinCommand::Cd) => runner::cd(&args),
             Command::Executable(path) => Ok(runner::executable(path, &args, output_config)),
