@@ -17,7 +17,10 @@ use std::ops::ControlFlow;
 
 fn main() -> Result<()> {
     let helper = ShellHelper::default();
-    let config = Config::builder().auto_add_history(true).build();
+    let config = Config::builder()
+        .completion_type(rustyline::CompletionType::List)
+        .auto_add_history(true)
+        .build();
     let history = rustyline::sqlite_history::SQLiteHistory::with_config(&config)?;
     let mut rl: Editor<ShellHelper, _> = Editor::with_history(config, history)?;
     rl.set_helper(Some(helper));

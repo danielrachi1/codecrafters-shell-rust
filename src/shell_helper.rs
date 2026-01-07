@@ -1,8 +1,8 @@
-use rustyline::Helper;
 use rustyline::completion::Completer;
 use rustyline::highlight::{CmdKind, Highlighter};
 use rustyline::hint::Hinter;
 use rustyline::validate::Validator;
+use rustyline::Helper;
 use std::borrow::Cow;
 use std::vec;
 
@@ -29,22 +29,41 @@ impl Completer for ShellHelper {
         let prefix = line;
 
         if prefix == "ech" && pos == line.len() {
-            return Ok((0, vec!["echo ".to_string()]));
+            return Ok((0, vec!["echo".to_string()]));
         } else if prefix == "exi" && pos == line.len() {
-            return Ok((0, vec!["exit ".to_string()]));
+            return Ok((0, vec!["exit".to_string()]));
         }
 
-        if let Some(path) = PathBins::new()?.0.iter().find(|bin| {
-            bin.file_name()
-                .unwrap()
-                .to_string_lossy()
-                .starts_with(prefix)
-        }) {
-            let completion = path.file_name().unwrap().to_string_lossy().to_string() + " ";
-            Ok((0, vec![completion]))
-        } else {
-            Ok((0, vec![]))
-        }
+        let mut candidates: Vec<String> = PathBins::new()?
+            .0
+            .iter()
+            .filter_map(|bin| {
+                bin.file_name().and_then(|name| {
+                    let name_str = name.to_string_lossy();
+                    if name_str.starts_with(prefix) {
+                        Some(name_str.to_string())
+                    } else {
+                        None
+                    }
+                })
+            })
+            .collect();
+
+        candidates.sort();
+
+        Ok((0, candidates))
+    }
+
+    fn update(
+        &self,
+        line: &mut rustyline::line_buffer::LineBuffer,
+        start: usize,
+        elected: &str,
+        cl: &mut rustyline::Changeset,
+    ) {
+        let candidate_with_space = format!("{} ", elected);
+        let end = line.pos();
+        line.replace(start..end, &candidate_with_space, cl);
     }
 }
 
