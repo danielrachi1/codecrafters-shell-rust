@@ -5,6 +5,7 @@ pub enum BuiltinCommand {
     Type,
     Pwd,
     Cd,
+    History,
 }
 
 impl TryFrom<String> for BuiltinCommand {
@@ -17,6 +18,7 @@ impl TryFrom<String> for BuiltinCommand {
             "type" => Ok(BuiltinCommand::Type),
             "pwd" => Ok(BuiltinCommand::Pwd),
             "cd" => Ok(BuiltinCommand::Cd),
+            "history" => Ok(BuiltinCommand::History),
             _ => Err("Not a builtin command".to_string()),
         }
     }
@@ -30,6 +32,7 @@ impl std::fmt::Display for BuiltinCommand {
             BuiltinCommand::Type => write!(f, "type"),
             BuiltinCommand::Pwd => write!(f, "pwd"),
             BuiltinCommand::Cd => write!(f, "cd"),
+            BuiltinCommand::History => write!(f, "history"),
         }
     }
 }

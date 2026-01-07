@@ -1,8 +1,8 @@
+use rustyline::Helper;
 use rustyline::completion::Completer;
 use rustyline::highlight::{CmdKind, Highlighter};
 use rustyline::hint::Hinter;
 use rustyline::validate::Validator;
-use rustyline::Helper;
 use std::borrow::Cow;
 use std::vec;
 
@@ -66,7 +66,8 @@ impl Completer for ShellHelper {
         cl: &mut rustyline::Changeset,
     ) {
         // Check if there are other candidates that start with the elected string
-        let has_more_candidates = self.get_candidates(elected)
+        let has_more_candidates = self
+            .get_candidates(elected)
             .map(|candidates| candidates.iter().any(|c| c != elected))
             .unwrap_or(false);
 

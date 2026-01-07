@@ -31,6 +31,7 @@ impl Order {
             Command::Builtin(BuiltinCommand::Type) => runner::r#type(&args, output_config),
             Command::Builtin(BuiltinCommand::Pwd) => Ok(runner::pwd(output_config)),
             Command::Builtin(BuiltinCommand::Cd) => runner::cd(&args),
+            Command::Builtin(BuiltinCommand::History) => Ok(runner::history(&args)),
             Command::Executable(path) => Ok(runner::executable(path, &args, output_config)),
         };
 

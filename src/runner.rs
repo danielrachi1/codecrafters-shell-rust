@@ -74,3 +74,7 @@ pub fn executable(
     output_config.stderr.write_all(&command_out.stderr).unwrap();
     ControlFlow::Continue(())
 }
+
+pub fn history(_args: &Vec<String>) -> ControlFlow<()> {
+    ControlFlow::Continue(())
+}
