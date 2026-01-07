@@ -13,14 +13,16 @@ impl TryFrom<String> for Command {
 
     fn try_from(value: String) -> Result<Self, Self::Error> {
         if let Ok(builtin_command) = BuiltinCommand::try_from(value.clone()) {
-            Ok(Self::Builtin(builtin_command))
+            return Ok(Self::Builtin(builtin_command));
+        }
+        if let Some(path) = PathBins::new()?
+            .0
+            .iter()
+            .find(|bin| bin.file_name().unwrap().to_string_lossy() == value)
+        {
+            Ok(Self::Executable(path.into()))
         } else {
-            let path = PathBins::new()?.0.contains(&value.clone().into());
-            if path {
-                Ok(Self::Executable(value.into()))
-            } else {
-                Err(NotFound::Command(value))
-            }
+            Err(NotFound::Command(value))
         }
     }
 }
