@@ -14,6 +14,26 @@ impl ShellHelper {
     pub fn default() -> Self {
         ShellHelper
     }
+
+    fn get_candidates(&self, prefix: &str) -> rustyline::Result<Vec<String>> {
+        let mut candidates: Vec<String> = PathBins::new()?
+            .0
+            .iter()
+            .filter_map(|bin| {
+                bin.file_name().and_then(|name| {
+                    let name_str = name.to_string_lossy();
+                    if name_str.starts_with(prefix) {
+                        Some(name_str.to_string())
+                    } else {
+                        None
+                    }
+                })
+            })
+            .collect();
+
+        candidates.sort();
+        Ok(candidates)
+    }
 }
 
 impl Completer for ShellHelper {
@@ -34,23 +54,7 @@ impl Completer for ShellHelper {
             return Ok((0, vec!["exit".to_string()]));
         }
 
-        let mut candidates: Vec<String> = PathBins::new()?
-            .0
-            .iter()
-            .filter_map(|bin| {
-                bin.file_name().and_then(|name| {
-                    let name_str = name.to_string_lossy();
-                    if name_str.starts_with(prefix) {
-                        Some(name_str.to_string())
-                    } else {
-                        None
-                    }
-                })
-            })
-            .collect();
-
-        candidates.sort();
-
+        let candidates = self.get_candidates(prefix)?;
         Ok((0, candidates))
     }
 
@@ -61,9 +65,21 @@ impl Completer for ShellHelper {
         elected: &str,
         cl: &mut rustyline::Changeset,
     ) {
-        let candidate_with_space = format!("{} ", elected);
+        // Check if there are other candidates that start with the elected string
+        let has_more_candidates = self.get_candidates(elected)
+            .map(|candidates| candidates.iter().any(|c| c != elected))
+            .unwrap_or(false);
+
+        // If there are other candidates, it's a partial completion (no space)
+        // Otherwise, it's a full completion (add space)
+        let replacement = if has_more_candidates {
+            elected.to_string()
+        } else {
+            format!("{} ", elected)
+        };
+
         let end = line.pos();
-        line.replace(start..end, &candidate_with_space, cl);
+        line.replace(start..end, &replacement, cl);
     }
 }
 
