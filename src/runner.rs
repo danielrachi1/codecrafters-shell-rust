@@ -1,6 +1,5 @@
 use rustyline::Editor;
-use rustyline::history::History;
-use rustyline::sqlite_history::SQLiteHistory;
+use rustyline::history::{FileHistory, History};
 
 use crate::builtin_command::BuiltinCommand;
 use crate::error::argument::ArgumentError;
@@ -83,26 +82,31 @@ pub fn executable(
 }
 
 pub fn history(
-    editor: &Editor<ShellHelper, SQLiteHistory>,
+    editor: &mut Editor<ShellHelper, FileHistory>,
     mut output_config: OutputConfig,
     args: &[String],
 ) -> Result<ControlFlow<()>, ArgumentError> {
-    let history = editor.history();
+    if args.contains(&"-r".to_string()) {
+        let history_file_path = args.get(1).unwrap();
+        editor.load_history(history_file_path).unwrap();
+        return Ok(ControlFlow::Continue(()));
+    } else {
+        let history = editor.history();
+        let len = history.len();
 
-    let len = history.len();
+        let n: usize = match args.first() {
+            Some(s) => s.parse().map_err(|_| ArgumentError::WrongType)?,
+            None => len,
+        };
 
-    let n: usize = match args.first() {
-        Some(s) => s.parse().map_err(|_| ArgumentError::WrongType)?,
-        None => len,
-    };
+        let start = len.saturating_sub(n);
 
-    let start = len.saturating_sub(n);
-
-    for i in start..len {
-        if let Some(result) = history.get(i, SearchDirection::Forward).unwrap() {
-            writeln!(output_config.stdout, "    {} {}", i + 1, result.entry).unwrap()
+        for i in start..len {
+            if let Some(result) = history.get(i, SearchDirection::Forward).unwrap() {
+                writeln!(output_config.stdout, "    {} {}", i + 1, result.entry).unwrap()
+            }
         }
-    }
+    };
 
     Ok(ControlFlow::Continue(()))
 }

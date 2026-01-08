@@ -6,4 +6,4 @@ edition = "2024"
 rust-version = "1.91"
 
 [dependencies]
-rustyline = {version = "17.0.2", features = ["with-sqlite-history", "derive"]}
+rustyline = { version = "17.0.2", features = ["with-file-history", "derive"] }

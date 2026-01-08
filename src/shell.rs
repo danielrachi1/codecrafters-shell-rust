@@ -2,9 +2,9 @@ use crate::ShellHelper;
 use crate::input;
 use crate::order::Order;
 use rustyline::Editor;
-use rustyline::sqlite_history::SQLiteHistory;
+use rustyline::history::FileHistory;
 
-pub fn input(rl: &Editor<ShellHelper, SQLiteHistory>, line: String) -> Option<Order<'_>> {
+pub fn input(rl: &mut Editor<ShellHelper, FileHistory>, line: String) -> Option<Order<'_>> {
     if line.is_empty() {
         return None;
     }

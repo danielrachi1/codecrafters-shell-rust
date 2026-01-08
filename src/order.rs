@@ -1,5 +1,5 @@
 use rustyline::Editor;
-use rustyline::sqlite_history::SQLiteHistory;
+use rustyline::history::FileHistory;
 
 use crate::output_config::OutputConfig;
 use crate::runner;
@@ -11,7 +11,7 @@ pub struct Order<'a> {
     command: Command,
     args: Vec<String>,
     output_config: OutputConfig,
-    editor: &'a Editor<ShellHelper, SQLiteHistory>,
+    editor: &'a mut Editor<ShellHelper, FileHistory>,
 }
 
 impl<'a> Order<'a> {
@@ -19,7 +19,7 @@ impl<'a> Order<'a> {
         command: Command,
         args: Vec<String>,
         output_config: OutputConfig,
-        editor: &'a Editor<ShellHelper, SQLiteHistory>,
+        editor: &'a mut Editor<ShellHelper, FileHistory>,
     ) -> Self {
         Order {
             command,
