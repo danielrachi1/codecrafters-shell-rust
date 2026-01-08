@@ -3,6 +3,7 @@ use rustyline::history::History;
 use rustyline::sqlite_history::SQLiteHistory;
 
 use crate::builtin_command::BuiltinCommand;
+use crate::error::argument::ArgumentError;
 use crate::error::not_found::NotFound;
 use crate::output_config::OutputConfig;
 use crate::path_bins::PathBins;
@@ -84,14 +85,24 @@ pub fn executable(
 pub fn history(
     editor: &Editor<ShellHelper, SQLiteHistory>,
     mut output_config: OutputConfig,
-) -> ControlFlow<()> {
+    args: &[String],
+) -> Result<ControlFlow<()>, ArgumentError> {
     let history = editor.history();
+
     let len = history.len();
 
-    for i in 0..len {
+    let n: usize = match args.first() {
+        Some(s) => s.parse().map_err(|_| ArgumentError::WrongType)?,
+        None => len,
+    };
+
+    let start = len.saturating_sub(n);
+
+    for i in start..len {
         if let Some(result) = history.get(i, SearchDirection::Forward).unwrap() {
             writeln!(output_config.stdout, "    {} {}", i + 1, result.entry).unwrap()
         }
     }
-    ControlFlow::Continue(())
+
+    Ok(ControlFlow::Continue(()))
 }

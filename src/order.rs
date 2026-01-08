@@ -37,13 +37,19 @@ impl<'a> Order<'a> {
             editor,
         } = self;
 
-        let result = match &command {
+        let result: Result<ControlFlow<()>, Box<dyn std::error::Error>> = match &command {
             Command::Builtin(BuiltinCommand::Exit) => Ok(runner::exit()),
             Command::Builtin(BuiltinCommand::Echo) => Ok(runner::echo(&args, output_config)),
-            Command::Builtin(BuiltinCommand::Type) => runner::r#type(&args, output_config),
+            Command::Builtin(BuiltinCommand::Type) => runner::r#type(&args, output_config)
+                .map_err(|e| Box::new(e) as Box<dyn std::error::Error>),
             Command::Builtin(BuiltinCommand::Pwd) => Ok(runner::pwd(output_config)),
-            Command::Builtin(BuiltinCommand::Cd) => runner::cd(&args),
-            Command::Builtin(BuiltinCommand::History) => Ok(runner::history(editor, output_config)),
+            Command::Builtin(BuiltinCommand::Cd) => {
+                runner::cd(&args).map_err(|e| Box::new(e) as Box<dyn std::error::Error>)
+            }
+            Command::Builtin(BuiltinCommand::History) => {
+                runner::history(editor, output_config, &args)
+                    .map_err(|e| Box::new(e) as Box<dyn std::error::Error>)
+            }
             Command::Executable(path) => Ok(runner::executable(path, &args, output_config)),
         };
 
