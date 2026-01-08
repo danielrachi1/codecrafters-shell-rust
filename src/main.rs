@@ -12,7 +12,7 @@ mod shell;
 mod shell_helper;
 
 use crate::shell_helper::ShellHelper;
-use rustyline::{Config, Editor, Result};
+use rustyline::{Config, Editor, Result, sqlite_history::SQLiteHistory};
 use std::ops::ControlFlow;
 
 fn main() -> Result<()> {
@@ -22,13 +22,13 @@ fn main() -> Result<()> {
         .auto_add_history(true)
         .build();
     let history = rustyline::sqlite_history::SQLiteHistory::with_config(&config)?;
-    let mut rl: Editor<ShellHelper, _> = Editor::with_history(config, history)?;
+    let mut rl: Editor<ShellHelper, SQLiteHistory> = Editor::with_history(config, history)?;
     rl.set_helper(Some(helper));
 
     loop {
         let line = rl.readline("$ ")?;
 
-        let Some(order) = shell::input(line) else {
+        let Some(order) = shell::input(&rl, line) else {
             continue;
         };
 

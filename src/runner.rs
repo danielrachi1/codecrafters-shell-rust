@@ -1,7 +1,13 @@
+use rustyline::Editor;
+use rustyline::history::History;
+use rustyline::sqlite_history::SQLiteHistory;
+
 use crate::builtin_command::BuiltinCommand;
 use crate::error::not_found::NotFound;
 use crate::output_config::OutputConfig;
 use crate::path_bins::PathBins;
+use crate::shell_helper::ShellHelper;
+use rustyline::history::SearchDirection;
 use std::env;
 use std::io::Write;
 use std::ops::ControlFlow;
@@ -75,6 +81,17 @@ pub fn executable(
     ControlFlow::Continue(())
 }
 
-pub fn history(_args: &Vec<String>) -> ControlFlow<()> {
+pub fn history(
+    editor: &Editor<ShellHelper, SQLiteHistory>,
+    mut output_config: OutputConfig,
+) -> ControlFlow<()> {
+    let history = editor.history();
+    let len = history.len();
+
+    for i in 0..len {
+        if let Some(result) = history.get(i, SearchDirection::Forward).unwrap() {
+            writeln!(output_config.stdout, "    {} {}", i + 1, result.entry).unwrap()
+        }
+    }
     ControlFlow::Continue(())
 }

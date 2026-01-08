@@ -1,20 +1,31 @@
+use rustyline::Editor;
+use rustyline::sqlite_history::SQLiteHistory;
+
 use crate::output_config::OutputConfig;
 use crate::runner;
+use crate::shell_helper::ShellHelper;
 use crate::{builtin_command::BuiltinCommand, command::Command};
 use std::ops::ControlFlow;
 
-pub struct Order {
+pub struct Order<'a> {
     command: Command,
     args: Vec<String>,
     output_config: OutputConfig,
+    editor: &'a Editor<ShellHelper, SQLiteHistory>,
 }
 
-impl Order {
-    pub fn new(command: Command, args: Vec<String>, output_config: OutputConfig) -> Self {
+impl<'a> Order<'a> {
+    pub fn new(
+        command: Command,
+        args: Vec<String>,
+        output_config: OutputConfig,
+        editor: &'a Editor<ShellHelper, SQLiteHistory>,
+    ) -> Self {
         Order {
             command,
             args,
             output_config,
+            editor,
         }
     }
 
@@ -23,6 +34,7 @@ impl Order {
             command,
             args,
             output_config,
+            editor,
         } = self;
 
         let result = match &command {
@@ -31,7 +43,7 @@ impl Order {
             Command::Builtin(BuiltinCommand::Type) => runner::r#type(&args, output_config),
             Command::Builtin(BuiltinCommand::Pwd) => Ok(runner::pwd(output_config)),
             Command::Builtin(BuiltinCommand::Cd) => runner::cd(&args),
-            Command::Builtin(BuiltinCommand::History) => Ok(runner::history(&args)),
+            Command::Builtin(BuiltinCommand::History) => Ok(runner::history(editor, output_config)),
             Command::Executable(path) => Ok(runner::executable(path, &args, output_config)),
         };
 
