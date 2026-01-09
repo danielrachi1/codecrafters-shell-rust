@@ -1,5 +1,5 @@
-use rustyline::history::{FileHistory, History};
 use rustyline::Editor;
+use rustyline::history::{FileHistory, History};
 
 use crate::builtin_command::BuiltinCommand;
 use crate::error::argument::ArgumentError;
@@ -8,11 +8,11 @@ use crate::output_config::OutputConfig;
 use crate::path_bins::PathBins;
 use crate::shell_helper::ShellHelper;
 use rustyline::history::SearchDirection;
-use std::env;
 use std::fs::File;
-use std::io::Write;
+use std::io::{BufRead, BufReader, Write};
 use std::ops::ControlFlow;
-use std::path::Path;
+use std::path::{Path, PathBuf};
+use std::{env, fs};
 
 pub fn exit() -> ControlFlow<()> {
     ControlFlow::Break(())
@@ -60,11 +60,7 @@ pub fn cd(args: &[String]) -> Result<ControlFlow<()>, NotFound> {
         .to_string_lossy()
         .into();
     let path = if let Some(p) = args.first() {
-        if p == "~" {
-            home
-        } else {
-            p.clone()
-        }
+        if p == "~" { home } else { p.clone() }
     } else {
         home
     };
@@ -86,24 +82,23 @@ pub fn executable(
     ControlFlow::Continue(())
 }
 
+// todo: ugliest function i've ever written. will fix later.
 pub fn history(
     editor: &mut Editor<ShellHelper, FileHistory>,
     mut output_config: OutputConfig,
     args: &[String],
 ) -> Result<ControlFlow<()>, ArgumentError> {
     if args.contains(&"-r".to_string()) {
-        let history_file_path = args.get(1).unwrap();
+        let history_file_path = args.get(1).unwrap().as_str();
         editor.load_history(history_file_path).unwrap();
     } else if args.contains(&"-w".to_string()) {
         let history_file_path = args.get(1).unwrap();
-        let mut history_file = File::create_new(history_file_path).unwrap();
-        let history = editor.history();
-        let len = history.len();
-        for i in 0..len {
-            if let Some(result) = history.get(i, SearchDirection::Forward).unwrap() {
-                writeln!(history_file, "{}", result.entry).unwrap()
-            }
-        }
+        editor.save_history(history_file_path).unwrap();
+        remove_first_line(history_file_path);
+    } else if args.contains(&"-a".to_string()) {
+        let history_file_path: PathBuf = args.get(1).unwrap().into();
+        editor.append_history(&history_file_path.as_path()).unwrap();
+        remove_first_line(history_file_path.to_str().unwrap());
     } else {
         let history = editor.history();
         let len = history.len();
@@ -123,4 +118,23 @@ pub fn history(
     };
 
     Ok(ControlFlow::Continue(()))
+}
+
+// Rustyline writes a "#V2" at the start of the history file when using the
+// provided methods for saving and appending to a file. this breaks the tests,
+// so this function is provided to still be able to use the rustyline methods
+fn remove_first_line(file_path: &str) {
+    let file = File::open(file_path).unwrap();
+    let reader = BufReader::new(file);
+    let mut lines: Vec<String> = reader.lines().map(|l| l.unwrap()).collect();
+
+    // Remove the "#V2" line if it exists
+    if lines.first().is_some_and(|line| line.starts_with("#V2")) {
+        lines.remove(0);
+    }
+
+    let mut file = fs::File::create(file_path).unwrap();
+    for line in lines {
+        writeln!(file, "{}", line).unwrap();
+    }
 }
