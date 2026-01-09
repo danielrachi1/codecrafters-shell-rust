@@ -14,7 +14,11 @@ use std::ops::ControlFlow;
 use std::path::{Path, PathBuf};
 use std::{env, fs};
 
-pub fn exit() -> ControlFlow<()> {
+pub fn exit(editor: &mut Editor<ShellHelper, FileHistory>) -> ControlFlow<()> {
+    if let Ok(history_file_path) = env::var("HISTFILE") {
+        editor.append_history(&history_file_path).unwrap();
+        remove_first_line(history_file_path.as_str());
+    }
     ControlFlow::Break(())
 }
 

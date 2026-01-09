@@ -38,7 +38,7 @@ impl<'a> Order<'a> {
         } = self;
 
         let result: Result<ControlFlow<()>, Box<dyn std::error::Error>> = match &command {
-            Command::Builtin(BuiltinCommand::Exit) => Ok(runner::exit()),
+            Command::Builtin(BuiltinCommand::Exit) => Ok(runner::exit(editor)),
             Command::Builtin(BuiltinCommand::Echo) => Ok(runner::echo(&args, output_config)),
             Command::Builtin(BuiltinCommand::Type) => runner::r#type(&args, output_config)
                 .map_err(|e| Box::new(e) as Box<dyn std::error::Error>),
