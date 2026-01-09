@@ -1,5 +1,5 @@
-use rustyline::Editor;
 use rustyline::history::{FileHistory, History};
+use rustyline::Editor;
 
 use crate::builtin_command::BuiltinCommand;
 use crate::error::argument::ArgumentError;
@@ -9,6 +9,7 @@ use crate::path_bins::PathBins;
 use crate::shell_helper::ShellHelper;
 use rustyline::history::SearchDirection;
 use std::env;
+use std::fs::File;
 use std::io::Write;
 use std::ops::ControlFlow;
 use std::path::Path;
@@ -59,7 +60,11 @@ pub fn cd(args: &[String]) -> Result<ControlFlow<()>, NotFound> {
         .to_string_lossy()
         .into();
     let path = if let Some(p) = args.first() {
-        if p == "~" { home } else { p.clone() }
+        if p == "~" {
+            home
+        } else {
+            p.clone()
+        }
     } else {
         home
     };
@@ -89,7 +94,16 @@ pub fn history(
     if args.contains(&"-r".to_string()) {
         let history_file_path = args.get(1).unwrap();
         editor.load_history(history_file_path).unwrap();
-        return Ok(ControlFlow::Continue(()));
+    } else if args.contains(&"-w".to_string()) {
+        let history_file_path = args.get(1).unwrap();
+        let mut history_file = File::create_new(history_file_path).unwrap();
+        let history = editor.history();
+        let len = history.len();
+        for i in 0..len {
+            if let Some(result) = history.get(i, SearchDirection::Forward).unwrap() {
+                writeln!(history_file, "{}", result.entry).unwrap()
+            }
+        }
     } else {
         let history = editor.history();
         let len = history.len();
