@@ -13,7 +13,7 @@ mod shell_helper;
 
 use crate::shell_helper::ShellHelper;
 use rustyline::{Config, Editor, Result, history::FileHistory};
-use std::ops::ControlFlow;
+use std::{env, ops::ControlFlow};
 
 fn main() -> Result<()> {
     let helper = ShellHelper::default();
@@ -24,6 +24,10 @@ fn main() -> Result<()> {
     let history = FileHistory::with_config(&config);
     let mut rl: Editor<ShellHelper, FileHistory> = Editor::with_history(config, history)?;
     rl.set_helper(Some(helper));
+
+    if let Ok(history_file_path) = env::var("HISTFILE") {
+        rl.load_history(&history_file_path).unwrap();
+    }
 
     loop {
         let line = rl.readline("$ ")?;
