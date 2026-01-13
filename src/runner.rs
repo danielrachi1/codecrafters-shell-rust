@@ -22,15 +22,15 @@ pub fn exit(editor: &mut Editor<ShellHelper, FileHistory>) -> ControlFlow<()> {
     ControlFlow::Break(())
 }
 
-pub fn echo(args: &[String], mut output_config: OutputConfig) -> ControlFlow<()> {
+pub fn echo(args: &[String], mut output_config: OutputConfig) -> (ControlFlow<()>, OutputConfig) {
     writeln!(output_config.stdout, "{}", args.join(" ")).unwrap();
-    ControlFlow::Continue(())
+    (ControlFlow::Continue(()), output_config)
 }
 
 pub fn r#type(
     args: &Vec<String>,
     mut output_config: OutputConfig,
-) -> Result<ControlFlow<()>, NotFound> {
+) -> Result<(ControlFlow<()>, OutputConfig), NotFound> {
     for arg in args {
         match BuiltinCommand::try_from(arg.clone()) {
             Ok(_) => {
@@ -49,13 +49,13 @@ pub fn r#type(
             }
         }
     }
-    Ok(ControlFlow::Continue(()))
+    Ok((ControlFlow::Continue(()), output_config))
 }
 
-pub fn pwd(mut output_config: OutputConfig) -> ControlFlow<()> {
+pub fn pwd(mut output_config: OutputConfig) -> (ControlFlow<()>, OutputConfig) {
     let path = std::env::current_dir().expect("couldn't access current working directory");
     writeln!(output_config.stdout, "{}", path.display()).unwrap();
-    ControlFlow::Continue(())
+    (ControlFlow::Continue(()), output_config)
 }
 
 pub fn cd(args: &[String]) -> Result<ControlFlow<()>, NotFound> {
@@ -76,14 +76,31 @@ pub fn executable(
     path: &Path,
     args: &Vec<String>,
     mut output_config: OutputConfig,
-) -> ControlFlow<()> {
-    let command_out = std::process::Command::new(path.file_name().unwrap())
-        .args(args)
-        .output()
-        .unwrap();
+    stdin: Option<Vec<u8>>,
+) -> (ControlFlow<()>, OutputConfig) {
+    let mut command = std::process::Command::new(path.file_name().unwrap());
+    command.args(args);
+
+    if stdin.is_some() {
+        command.stdin(std::process::Stdio::piped());
+    }
+
+    command.stdout(std::process::Stdio::piped());
+    command.stderr(std::process::Stdio::piped());
+
+    let mut child = command.spawn().unwrap();
+
+    if let Some(input_data) = stdin {
+        if let Some(mut stdin_handle) = child.stdin.take() {
+            use std::io::Write;
+            stdin_handle.write_all(&input_data).unwrap();
+        }
+    }
+
+    let command_out = child.wait_with_output().unwrap();
     output_config.stdout.write_all(&command_out.stdout).unwrap();
     output_config.stderr.write_all(&command_out.stderr).unwrap();
-    ControlFlow::Continue(())
+    (ControlFlow::Continue(()), output_config)
 }
 
 // todo: ugliest function i've ever written. will fix later.
@@ -91,7 +108,7 @@ pub fn history(
     editor: &mut Editor<ShellHelper, FileHistory>,
     mut output_config: OutputConfig,
     args: &[String],
-) -> Result<ControlFlow<()>, ArgumentError> {
+) -> Result<(ControlFlow<()>, OutputConfig), ArgumentError> {
     if args.contains(&"-r".to_string()) {
         let history_file_path = args.get(1).unwrap().as_str();
         editor.load_history(history_file_path).unwrap();
@@ -121,7 +138,7 @@ pub fn history(
         }
     };
 
-    Ok(ControlFlow::Continue(()))
+    Ok((ControlFlow::Continue(()), output_config))
 }
 
 // Rustyline writes a "#V2" at the start of the history file when using the
